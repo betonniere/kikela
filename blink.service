@@ -1,0 +1,15 @@
+[Unit]
+Description=Blink monitoring system
+After=syslog.target network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/yannick/blink/surcouf.py
+WorkingDirectory=/home/yannick/blink
+User=yannick
+StandardOutput=syslog
+StandardError=syslog
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
