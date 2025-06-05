@@ -3,7 +3,9 @@
 import aiohttp
 import asyncio
 import datetime
+import json
 import os
+import pathlib
 import re
 import rich
 import rich.traceback
@@ -21,9 +23,6 @@ sys.path.append(root + '/blinkpy')
 from blinkpy.blinkpy import Blink
 from blinkpy.auth import Auth as BlinkAuth
 import blinkpy.helpers.util as BlinkUtil
-
-smartphones = {'yannick':  {'ip': '192.168.1.18', 'arping_attemps': 5,  'arping_delay': 1},
-               'delphine': {'ip': '192.168.1.63', 'arping_attemps': 10, 'arping_delay': 2}}
 
 
 # -----------------------------------------------
@@ -89,20 +88,21 @@ class House:
     # ----
     async def status(self):
         await self.control_center().refresh()
-        print(f"{self.control_center().name} status: {self.control_center().arm}")
+        print(f'{self.control_center().name} status: {self.control_center().arm}')
         print()
 
 
 # -----------------------------------------------
 class Network:
     # ----
-    def __init__(self):
+    def __init__(self, smartphones):
         self.pattern = re.compile(r'^.*bytes from (?P<MAC>(.*)) \((?P<IP>(.*))\):.*')
+        self.smartphones = smartphones
 
     # ----
     def probe(self):
         self.empty = True
-        for member, smartphone in smartphones.items():
+        for member, smartphone in self.smartphones.items():
             cmd = ['/usr/sbin/arping', '-v', '-c', '1', smartphone['ip']]
             for _ in range(0, smartphone['arping_attemps']):
                 result = subprocess.run(cmd, capture_output=True, text=True)
@@ -121,22 +121,26 @@ def signal_handler(sig, frame):
 
 # -----------------------------------------------
 async def main():
-    house = House('surcouf')
-    network = Network()
+    config_file = pathlib.Path(__file__).parent / 'config.json'
+    with config_file.open(encoding='utf-8') as f:
+        config = json.load(f)
 
-    await house.open()
-    try:
-        while True:
-            network.probe()
+        house = House(config['hub'])
+        network = Network(config['smartphones'])
 
-            if network.empty:
-                await house.empty()
-                time.sleep(5)
-            else:
-                await house.occupied()
-                time.sleep(60)
-    finally:
-        await house.close()
+        await house.open()
+        try:
+            while True:
+                network.probe()
+
+                if network.empty:
+                    await house.empty()
+                    time.sleep(5)
+                else:
+                    await house.occupied()
+                    time.sleep(60)
+        finally:
+            await house.close()
 
 
 signal.signal(signal.SIGINT, signal_handler)
