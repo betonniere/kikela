@@ -100,17 +100,23 @@ class Network:
         self.smartphones = smartphones
 
     # ----
-    def probe(self):
+    def probe(self, debug):
         self.empty = True
         for member, smartphone in self.smartphones.items():
-            cmd = ['/usr/sbin/arping', '-v', '-c', '1', smartphone['ip']]
+            cmd = ['/usr/sbin/arping', '-i', 'wlan0', '-c', '5', '-C', '1', smartphone['ip']]
+            if debug:
+                rich.print(cmd)
             for _ in range(0, smartphone['arping_attemps']):
                 result = subprocess.run(cmd, capture_output=True, text=True)
                 for line in result.stdout.splitlines():
                     match = self.pattern.match(line)
                     if match:
                         self.empty = False
+                        if debug:
+                            rich.print(smartphone['ip'] + ': [green]OK[/green]')
                         return
+                if debug:
+                    rich.print(smartphone['ip'] + ': [red]KO[/red]')
                 time.sleep(smartphone['arping_delay'])
 
 
@@ -131,7 +137,7 @@ async def main():
         await house.open()
         try:
             while True:
-                network.probe()
+                network.probe(config['debug'])
 
                 if network.empty:
                     await house.empty()
