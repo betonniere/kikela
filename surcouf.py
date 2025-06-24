@@ -38,7 +38,7 @@ class Logger:
 
 
 # -----------------------------------------------
-class House(Logger):
+class Hub(Logger):
     # ----
     def __init__(self, name, debug):
         super().__init__(debug)
@@ -107,7 +107,7 @@ class House(Logger):
 
 
 # -----------------------------------------------
-class Network:
+class Network(Logger):
     # ----
     def __init__(self, smartphones, debug):
         super().__init__(debug)
@@ -146,24 +146,31 @@ async def main():
 
         debug = False
         if 'debug' in config:
-            debug = True
+            debug = config['debug']
 
-        house = House(config['hub'], debug)
+        hubs = []
+        for name in config['hubs']:
+            hub = Hub(name, debug)
+            hubs.append(hub)
+            await hub.open()
+
         network = Network(config['smartphones'], debug)
 
-        await house.open()
         try:
             while True:
                 network.probe()
 
                 if network.empty:
-                    await house.empty()
+                    for hub in hubs:
+                        await hub.empty()
                     time.sleep(5)
                 else:
-                    await house.occupied()
+                    for hub in hubs:
+                        await hub.occupied()
                     time.sleep(60)
         finally:
-            await house.close()
+            for hub in hubs:
+                await hub.close()
 
 
 signal.signal(signal.SIGINT, signal_handler)
