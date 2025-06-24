@@ -26,9 +26,23 @@ import blinkpy.helpers.util as BlinkUtil
 
 
 # -----------------------------------------------
-class House:
+class Logger:
     # ----
-    def __init__(self, name):
+    def __init__(self, debug):
+        self.debug = debug
+
+    # ----
+    def log(self, trace):
+        if self.debug:
+            rich.print(trace)
+
+
+# -----------------------------------------------
+class House(Logger):
+    # ----
+    def __init__(self, name, debug):
+        super().__init__(debug)
+
         self.armed = None
         self.blink = None
         self.session = None
@@ -95,28 +109,27 @@ class House:
 # -----------------------------------------------
 class Network:
     # ----
-    def __init__(self, smartphones):
+    def __init__(self, smartphones, debug):
+        super().__init__(debug)
+
         self.pattern = re.compile(r'^.*bytes from (?P<MAC>(.*)) \((?P<IP>(.*))\):.*')
         self.smartphones = smartphones
 
     # ----
-    def probe(self, debug):
+    def probe(self):
         self.empty = True
         for member, smartphone in self.smartphones.items():
             cmd = ['/usr/sbin/arping', '-i', 'wlan0', '-c', '5', '-C', '1', smartphone['ip']]
-            if debug:
-                rich.print(cmd)
+            self.log(cmd)
             for _ in range(0, smartphone['arping_attemps']):
                 result = subprocess.run(cmd, capture_output=True, text=True)
                 for line in result.stdout.splitlines():
                     match = self.pattern.match(line)
                     if match:
                         self.empty = False
-                        if debug:
-                            rich.print(smartphone['ip'] + ': [green]OK[/green]')
+                        self.log(smartphone['ip'] + ': [green]OK[/green]')
                         return
-                if debug:
-                    rich.print(smartphone['ip'] + ': [red]KO[/red]')
+                self.log(smartphone['ip'] + ': [red]KO[/red]')
                 time.sleep(smartphone['arping_delay'])
 
 
@@ -131,13 +144,17 @@ async def main():
     with config_file.open(encoding='utf-8') as f:
         config = json.load(f)
 
-        house = House(config['hub'])
-        network = Network(config['smartphones'])
+        debug = False
+        if 'debug' in config:
+            debug = True
+
+        house = House(config['hub'], debug)
+        network = Network(config['smartphones'], debug)
 
         await house.open()
         try:
             while True:
-                network.probe(config['debug'])
+                network.probe()
 
                 if network.empty:
                     await house.empty()
