@@ -22,7 +22,11 @@ sys.path.append(root + '/blinkpy')
 
 from blinkpy.blinkpy import Blink
 from blinkpy.auth import Auth as BlinkAuth
+from blinkpy.auth import BlinkTwoFARequiredError
 import blinkpy.helpers.util as BlinkUtil
+
+import logging
+logging.basicConfig(level=logging.WARNING)
 
 
 # -----------------------------------------------
@@ -61,8 +65,11 @@ class Hub(Logger):
             auth = BlinkAuth(await BlinkUtil.json_load('/home/yannick/.ssh/blink.json'), session=self.session)
             self.blink.auth = auth
 
-            await self.blink.start()
-            await self.blink.save('/home/yannick/.ssh/blink.json')
+            try:
+                await self.blink.start()
+            except BlinkTwoFARequiredError:
+                await self.blink.prompt_2fa()
+                await self.blink.save("/home/yannick/.ssh/blink.json")
 
     # ----
     async def close(self):
@@ -92,7 +99,7 @@ class Hub(Logger):
             for item in reversed(manifest):
                 now = datetime.datetime.now(datetime.timezone.utc)
                 rich.print(now - item.created_at)
-                if now - item.created_at < datetime.timedelta(minures=1):
+                if now - item.created_at < datetime.timedelta(minutes=1):
                     try:
                         rich.print(item)
                         # await item.delete_video(self.blink)
