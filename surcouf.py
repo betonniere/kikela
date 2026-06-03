@@ -67,12 +67,20 @@ class Hub(Logger):
                 self.blink.auth = BlinkAuth(await BlinkUtil.json_load('/home/yannick/.ssh/blink.json'), session=self.session)
                 await self.blink.start()
 
+                if not self.blink.auth.login_attributes or not self.blink.available:
+                    raise BlinkTwoFARequiredError
+
             except BlinkTwoFARequiredError:
-                await self.blink.prompt_2fa()
-                await self.blink.save('/home/yannick/.ssh/blink.json')
+                try:
+                    await self.blink.prompt_2fa()
+                    await self.blink.save('/home/yannick/.ssh/blink.json')
+                except aiohttp.ClientError as e:
+                    print(f'Erreur lors de la connexion : {e}')
+                    await self.close()
 
             except aiohttp.ClientError as e:
                 print(f'Erreur lors de la connexion : {e}')
+                await self.close()
 
     # ----
     async def close(self):
