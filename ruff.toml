@@ -1,0 +1,23 @@
+line-length = 180
+required-version = "==0.15.8"
+target-version = "py311"
+
+[lint]
+select = [
+    "E",   # Erreurs pycodestyle (style PEP 8, inclut les lignes vides)
+    "W",   # Avertissements pycodestyle
+    "F",   # Pyflakes (erreurs logiques)
+    "B",   # Flake8-bugbear (bugs potentiels)
+    "I",   # Isort (tri automatique des imports)
+    "UP",  # Pyupgrade (modernisation syntaxe)
+]
+
+ignore = [
+    "E402", # Ignore les imports qui ne sont pas en haut du fichier
+    "I001", # Ignore les imports qui ne sont pas triés (gérés par isort)
+]
+
+[format]
+docstring-code-format = true
+line-ending = "lf"
+quote-style = "single"

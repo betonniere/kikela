@@ -26,6 +26,7 @@ from blinkpy.auth import BlinkTwoFARequiredError
 import blinkpy.helpers.util as BlinkUtil
 
 import logging
+
 logging.basicConfig(level=logging.WARNING)
 
 
@@ -68,10 +69,10 @@ class Hub(Logger):
 
             except BlinkTwoFARequiredError:
                 await self.blink.prompt_2fa()
-                await self.blink.save("/home/yannick/.ssh/blink.json")
+                await self.blink.save('/home/yannick/.ssh/blink.json')
 
             except aiohttp.ClientError as e:
-                print(f"Erreur lors de la connexion : {e}")
+                print(f'Erreur lors de la connexion : {e}')
 
     # ----
     async def close(self):
@@ -99,7 +100,7 @@ class Hub(Logger):
             manifest = self.control_center()._local_storage['manifest']
             rich.print(manifest)
             for item in reversed(manifest):
-                now = datetime.datetime.now(datetime.timezone.utc)
+                now = datetime.datetime.now(datetime.UTC)
                 rich.print(now - item.created_at)
                 if now - item.created_at < datetime.timedelta(minutes=1):
                     try:
@@ -127,7 +128,7 @@ class Network(Logger):
     # ----
     def probe(self):
         self.empty = True
-        for member, smartphone in self.smartphones.items():
+        for smartphone in self.smartphones.values():
             cmd = ['/usr/sbin/arping', '-i', 'wlan0', '-c', '5', '-C', '1', smartphone['ip']]
             self.log(cmd)
             for _ in range(0, smartphone['arping_attemps']):
@@ -177,6 +178,8 @@ async def main():
                     for hub in hubs:
                         await hub.occupied()
                     time.sleep(60)
+        except KeyError as e:
+            print(f'Fatal error: {e}')
         finally:
             for hub in hubs:
                 await hub.close()
