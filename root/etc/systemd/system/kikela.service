@@ -4,11 +4,9 @@ After=syslog.target network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /home/yannick/blink/surcouf.py
-WorkingDirectory=/home/yannick/blink
+ExecStart=/usr/bin/python3 /home/yannick/kikela/service.py
+WorkingDirectory=/home/yannick/kikela
 User=yannick
-StandardOutput=syslog
-StandardError=syslog
 Restart=always
 
 [Install]

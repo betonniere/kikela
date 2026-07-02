@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration Wi-Fi</title>
+    <style>
+      :root {
+        --bg-color: #1e1e2e;
+        --container-bg: #252538;
+        --border-color: #3f3f56;
+        --text-color: #cdd6f4;
+        --text-muted: #a6adc8;
+        --primary: #cba6f7;
+        --primary-hover: #b4befe;
+      }
+
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+      }
+
+      .app-container {
+        width: 100%;
+        max-width: 600px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .panel {
+        background-color: var(--container-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+      }
+
+      h2 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        font-size: 1.4rem;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 10px;
+        color: var(--text-color);
+        letter-spacing: 0.3px;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      label {
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+
+      input[type="text"], input[type="password"], select {
+        background-color: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 10px;
+        color: var(--text-color);
+        font-size: 0.95rem;
+        outline: none;
+        transition: border-color 0.2s;
+        box-sizing: border-box;
+        width: 100%;
+      }
+
+      input[type="text"]:focus, input[type="password"]:focus, select:focus {
+        border-color: var(--primary);
+      }
+
+      /* Style spécifique pour le select pour matcher le design sombre */
+      select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23cdd6f4' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 32px;
+      }
+
+      .checkbox-group {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        user-select: none;
+        margin-top: 8px;
+        margin-bottom: 8px;
+      }
+
+      .checkbox-group input {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--primary);
+        cursor: pointer;
+        margin: 0;
+      }
+
+      .btn {
+        background-color: var(--primary);
+        color: #11111b;
+        border: none;
+        border-radius: 6px;
+        padding: 10px 14px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: background-color 0.2s, transform 0.1s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 10px;
+      }
+
+      .btn:hover {
+        background-color: var(--primary-hover);
+      }
+
+      .btn:active {
+        transform: scale(0.98);
+      }
+
+      .btn-success {
+        background-color: var(--primary);
+      }
+
+      .btn-success:hover {
+        filter: brightness(1.1);
+      }
+
+      .section-divider {
+        margin-top: 10px;
+        margin-bottom: 20px;
+        border: 0;
+        border-top: 1px dashed var(--border-color);
+      }
+
+      .switching-panel {
+        display: none;
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+      }
+
+      .switching-panel p {
+        margin: 0;
+        color: var(--text-muted);
+        line-height: 1.4;
+      }
+
+      .spinner {
+        align-self: center;
+        width: 32px;
+        height: 32px;
+        border: 3px solid var(--border-color);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="app-container">
+      <div class="panel">
+        <h2>Configuration Wi-Fi</h2>
+
+        <form id="form">
+          <!-- Mode Station / Connexion à un réseau existant -->
+          <div class="form-group">
+            <label for="ssid">Nom du réseau (SSID)</label>
+            <input type="text" id="ssid" name="ssid" placeholder="Ex: MonReseauPrivé" required>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Mot de passe</label>
+            <input type="password" id="password" name="password" placeholder="••••••••">
+          </div>
+
+          <button type="submit" class="btn btn-success">Enregistrer les paramètres</button>
+        </form>
+        <p id="result"><b></b></p>
+
+        <div class="switching-panel" id="switching">
+          <div class="spinner"></div>
+          <h2>Bascule en cours…</h2>
+          <p>
+            Veuillez patienter pendant que l'appareil tente de
+            rejoindre le réseau renseigné.
+          </p>
+          <p>
+            Cela peut prendre quelques secondes.
+          </p>
+          <p>
+            Pendant ce temps, ne fermez ni ne rechargez cette page.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </body>
+</html>

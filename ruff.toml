@@ -18,6 +18,7 @@ ignore = [
 ]
 
 [format]
+skip-magic-trailing-comma = true
 docstring-code-format = true
 line-ending = "lf"
 quote-style = "single"
