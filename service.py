@@ -19,7 +19,9 @@
 import aiohttp
 import aiohttp.web
 import asyncio
+import binascii
 import datetime
+import hashlib
 import json
 import logging
 import os
@@ -28,6 +30,7 @@ import re
 import rich.traceback
 import signal
 import sys
+
 
 from config import Config
 from firmware import Firmware
@@ -301,7 +304,10 @@ class Wifi:
                         ssid = message['wifi']['ssid']
                         password = message['wifi']['password']
 
-                        cmd = ['sudo', 'nmcli', 'con', 'modify', 'WifiClient', '802-11-wireless.ssid', ssid, '802-11-wireless-security.psk', password]
+                        password_hash = hashlib.pbkdf2_hmac('sha1', password.encode(), ssid.encode(), 4096, 32)
+                        psk = binascii.hexlify(password_hash).decode()
+
+                        cmd = ['sudo', 'nmcli', 'con', 'modify', 'WifiClient', '802-11-wireless.ssid', ssid, '802-11-wireless-security.psk', psk]
                         await execute(cmd)
 
                         cmd = ['sudo', 'nmcli', 'con', 'up', 'WifiClient']
