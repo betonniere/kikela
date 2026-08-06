@@ -25,13 +25,11 @@ import subprocess
 
 # -----------------------------------------------
 if __name__ == '__main__':
-    # --
     print('Vérification des privilèges root...')
     if os.geteuid() != 0:
         print('Ce script doit être exécuté avec les privilèges root.')
         exit()
 
-    # --
     print('Installation des dépendances apt...')
     cmd = ['apt-get', 'update']
     subprocess.run(cmd, check=True)
@@ -44,7 +42,6 @@ if __name__ == '__main__':
         cmd = ['apt', 'install', '-y', dependency]
         subprocess.run(cmd, check=True)
 
-    # --
     print('Rendre arping exécutable avec les privilèges root...')
     cmd = ['setcap', 'cap_net_raw+ep', '/usr/sbin/arping']
     subprocess.run(cmd, check=True)
@@ -70,3 +67,10 @@ if __name__ == '__main__':
 
     with path.open('w', encoding='utf-8') as f:
         f.write(settings)
+
+    print('Autorise la mise à jour du clone...')
+    cmd = ['git', 'remote', 'rename', 'origin', 'upgrade']
+    subprocess.run(cmd, check=False)
+
+    cmd = ['git', 'submodule', 'update', '--init', '--recursive']
+    subprocess.run(cmd, check=True)

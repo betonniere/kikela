@@ -30,6 +30,7 @@ import signal
 import sys
 
 from config import Config
+from firmware import Firmware
 
 rich.traceback.install(show_locals=True)
 
@@ -533,7 +534,7 @@ def signal_handler():
 
 
 # -----------------------------------------------
-async def monitoring(frontend, wifi, network, account):
+async def monitoring(firmware, frontend, wifi, network, account):
 
     probe_period = 5
 
@@ -544,6 +545,8 @@ async def monitoring(frontend, wifi, network, account):
         try:
             # Vérification / configuration de la connexion Wi-Fi
             await wifi.check()
+
+            firmware.upgrade()
 
             # Sondage réseau et configuration utilisateur
             probe_task = asyncio.create_task(network.probe())
@@ -639,6 +642,8 @@ async def main():
     with Config(default_config) as config:
         settings = config.settings
 
+    firmware = Firmware()
+
     frontend = Frontend()
     frontend.add_page(WifiPage('wifi'))
     frontend.add_page(CredentialsPage('credentials'))
@@ -652,7 +657,7 @@ async def main():
     network = Network(settings['interface'])
     wifi = Wifi(frontend, settings['interface'], settings['connections'])
 
-    monitoring_task = asyncio.create_task(monitoring(frontend, wifi, network, account))
+    monitoring_task = asyncio.create_task(monitoring(firmware, frontend, wifi, network, account))
 
     try:
         await monitoring_task
