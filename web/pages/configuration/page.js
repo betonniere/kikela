@@ -74,7 +74,7 @@ export default
       div.innerHTML = `
         <input type="text" value="${val}" style="flex-grow: 1;" data-role="hub-value" data-index="${index}" placeholder="Nom du Hub">
         <span class="status-badge" data-hub-status="${val}">⚪ ...</span>
-        <button class="btn btn-danger" data-action="remove-hub" data-index="${index}">✕</button>
+        <button class="btn btn-danger" style="padding: 4px 8px; font-size: 0.75rem;" data-action="remove-hub">Supprimer</button>
       `;
       return div;
     }
