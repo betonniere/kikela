@@ -270,10 +270,10 @@ class Frontend:
 # -----------------------------------------------
 class Wifi:
     # ----
-    def __init__(self, frontend, interface, connection):
+    def __init__(self, frontend, interface, connections):
         self.frontend = frontend
         self.interface = interface
-        self.connection = connection
+        self.connections = connections
 
     # ----
     async def check(self):
@@ -316,8 +316,9 @@ class Wifi:
                         continue
 
                     else:
-                        if self.connection in active_connections:
-                            return
+                        for connection in self.connections:
+                            if connection in active_connections:
+                                return
 
                 await asyncio.sleep(2)
                 cmd_reconnect = ['sudo', 'nmcli', 'device', 'connect', 'wlan0']
@@ -634,7 +635,7 @@ async def main():
     for sig in (signal.SIGINT, signal.SIGTERM):
         loop.add_signal_handler(sig, signal_handler)
 
-    default_config = {'interface': 'wlan0', 'debug': False, 'connection': 'WifiClient', 'hubs': [], 'smartphones': {}}
+    default_config = {'interface': 'wlan0', 'debug': False, 'connections': ['WifiClient'], 'hubs': [], 'smartphones': {}}
     with Config(default_config) as config:
         settings = config.settings
 
@@ -649,7 +650,7 @@ async def main():
     account = BlinkAccount(frontend)
 
     network = Network(settings['interface'])
-    wifi = Wifi(frontend, settings['interface'], settings['connection'])
+    wifi = Wifi(frontend, settings['interface'], settings['connections'])
 
     monitoring_task = asyncio.create_task(monitoring(frontend, wifi, network, account))
 
