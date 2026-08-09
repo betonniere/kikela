@@ -45,6 +45,7 @@ import blinkpy.auth
 import blinkpy.blinkpy
 
 logging.basicConfig(level=logging.WARNING)
+# logging.getLogger('blinkpy').setLevel(logging.DEBUG)
 
 
 # -----------------------------------------------
@@ -543,6 +544,7 @@ def signal_handler():
 async def monitoring(firmware, frontend, wifi, network, account):
 
     probe_period = 5
+    hubs = []
 
     configuration_page = frontend.get_page('configuration')
     await configuration_page.display()
@@ -587,8 +589,14 @@ async def monitoring(firmware, frontend, wifi, network, account):
                 if not account.active():
                     await account.open()
 
+                new_hubs = []
                 with Config() as config:
-                    hubs = [Hub(name, account) for name in config.settings.get('hubs', [])]
+                    for hub_name in config.settings.get('hubs', []):
+                        if hub_name not in [hub.name for hub in hubs]:
+                            new_hubs.append(Hub(hub_name, account))
+                        else:
+                            new_hubs.append(next(hub for hub in hubs if hub.name == hub_name))
+                hubs = new_hubs
 
                 try:
                     if network.empty:
