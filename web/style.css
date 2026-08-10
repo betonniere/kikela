@@ -29,3 +29,12 @@ input{
 button{
   padding:8px 16px
 }
+
+#version-badge {
+  position:fixed;
+  bottom:8px;
+  right:12px;
+  font-size:0.75rem;
+  pointer-events:none;
+  z-index:9999
+}

@@ -29,6 +29,7 @@ import pathlib
 import re
 import rich.traceback
 import signal
+import subprocess
 import sys
 
 
@@ -140,8 +141,14 @@ class Frontend:
         self.clients = []
         self.waiters = []
 
+        self.version = 'inconnue'
+        result = subprocess.run(['git', 'describe', '--tags', '--always', '--dirty'], cwd=root, capture_output=True, text=True)
+        if result.returncode == 0:
+            self.version = result.stdout.strip()
+
         self.web_application = aiohttp.web.Application()
         self.web_application.router.add_get('/', self.index)
+        self.web_application.router.add_get('/api/version', self.get_version)
         self.web_application.router.add_get('/ws', self.handle_ws)
         self.web_application.router.add_static('/static/', path='web')
 
@@ -240,6 +247,10 @@ class Frontend:
     # ----
     async def index(self, request):
         return aiohttp.web.FileResponse('web/index.html')
+
+    # ----
+    async def get_version(self, request):
+        return aiohttp.web.json_response({'version': self.version})
 
     # ----
     async def handle_ws(self, request):

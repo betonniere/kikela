@@ -19,6 +19,25 @@ const ws = new WebSocket(`ws://${location.host}/ws`);
 
 let currentPage = null;
 
+async function displayVersion()
+{
+  try
+  {
+    const response = await fetch('/api/version');
+    const { version } = await response.json();
+
+    const badge = document.createElement('div');
+    badge.id = 'version-badge';
+    badge.textContent = `v${version}`;
+    document.body.appendChild(badge);
+  }
+  catch
+  {
+  }
+}
+
+displayVersion();
+
 async function loadPage(name, data)
 {
   const response = await fetch(`/static/pages/${name}/page.html`);
