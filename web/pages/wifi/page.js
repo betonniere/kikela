@@ -26,6 +26,15 @@ export default
     const result = document.getElementById('result');
     const switching = document.getElementById('switching');
     const timeout = document.getElementById('timeout');
+    const passwordInput = document.getElementById('password');
+    const togglePassword = document.getElementById('toggle-password');
+
+    togglePassword.addEventListener('click', () => {
+      const isHidden = passwordInput.type === 'password';
+      passwordInput.type = isHidden ? 'text' : 'password';
+      togglePassword.textContent = isHidden ? '🙈' : '👁';
+      togglePassword.setAttribute('aria-label', isHidden ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+    });
 
     form.addEventListener('submit', (event) => {
       event.preventDefault();

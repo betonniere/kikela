@@ -91,6 +91,32 @@
         padding-right: 32px;
       }
 
+      .password-field {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .password-field input {
+        padding-right: 40px;
+      }
+
+      .toggle-password {
+        position: absolute;
+        right: 6px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.1rem;
+        color: var(--text-muted);
+        padding: 4px 6px;
+        line-height: 1;
+      }
+
+      .toggle-password:hover {
+        color: var(--text-color);
+      }
+
       .checkbox-group {
         display: flex;
         flex-direction: row;
@@ -194,7 +220,10 @@
 
           <div class="form-group">
             <label for="password">Mot de passe</label>
-            <input type="password" id="password" name="password" placeholder="••••••••">
+            <div class="password-field">
+              <input type="password" id="password" name="password" placeholder="••••••••">
+              <button type="button" class="toggle-password" id="toggle-password" aria-label="Afficher le mot de passe">👁</button>
+            </div>
           </div>
 
           <button type="submit" class="btn btn-success">Enregistrer les paramètres</button>
