@@ -15,6 +15,7 @@
 //   along with Kikela.  If not, see <http://www.gnu.org/licenses/>.
 
 const REFRESH_INTERVAL_SECONDS = 5;
+const SWITCHING_TIMEOUT_SECONDS = 20;
 
 export default
 {
@@ -24,6 +25,7 @@ export default
     const form = document.getElementById('form');
     const result = document.getElementById('result');
     const switching = document.getElementById('switching');
+    const timeout = document.getElementById('timeout');
 
     form.addEventListener('submit', (event) => {
       event.preventDefault();
@@ -32,13 +34,14 @@ export default
 
     if (data && data.status === 'SWITCHING')
     {
-      startSwitchingScreen(form, result, switching);
+      startSwitchingScreen(form, result, switching, timeout);
       return;
     }
 
     form.style.display = '';
     result.style.display = '';
     switching.style.display = 'none';
+    timeout.style.display = 'none';
 
     if (data)
     {
@@ -48,15 +51,27 @@ export default
   }
 }
 
-function startSwitchingScreen(form, result, switching)
+function startSwitchingScreen(form, result, switching, timeout)
 {
   form.style.display = 'none';
   result.style.display = 'none';
   switching.style.display = 'flex';
+  timeout.style.display = 'none';
 
   let remaining = REFRESH_INTERVAL_SECONDS;
+  let elapsed = 0;
 
-  setInterval(() => {
+  const interval = setInterval(() => {
+    elapsed += 1;
+
+    if (elapsed >= SWITCHING_TIMEOUT_SECONDS)
+    {
+      clearInterval(interval);
+      switching.style.display = 'none';
+      timeout.style.display = 'flex';
+      return;
+    }
+
     remaining -= 1;
     if (remaining <= 0)
     {
