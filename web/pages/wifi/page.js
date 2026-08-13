@@ -69,16 +69,16 @@ function startSwitchingScreen(form, result, switching, timeout)
 
   let remaining = REFRESH_INTERVAL_SECONDS;
   let elapsed = 0;
+  let timedOut = false;
 
-  const interval = setInterval(() => {
+  setInterval(() => {
     elapsed += 1;
 
-    if (elapsed >= SWITCHING_TIMEOUT_SECONDS)
+    if (!timedOut && elapsed >= SWITCHING_TIMEOUT_SECONDS)
     {
-      clearInterval(interval);
+      timedOut = true;
       switching.style.display = 'none';
       timeout.style.display = 'flex';
-      return;
     }
 
     remaining -= 1;
