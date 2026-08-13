@@ -135,6 +135,8 @@ class Frontend:
         self.host = host
         self.port = port
 
+        self.log_pattern = r'\d{4}-(?P<MONTH>\d{2})-(?P<DAY>\d{2})T(?P<TIME>\d{2}:\d{2}:\d{2})\+\d{4}.*?:\s'
+
         self.pages = {}
         self.stack = []
 
@@ -150,6 +152,8 @@ class Frontend:
         self.web_application.router.add_get('/', self.index)
         self.web_application.router.add_get('/api/version', self.get_version)
         self.web_application.router.add_get('/ws', self.handle_ws)
+        self.web_application.router.add_get('/logs', self.logs_page)
+        self.web_application.router.add_get('/api/logs', self.get_logs)
         self.web_application.router.add_static('/static/', path='web')
 
     # ----
@@ -251,6 +255,34 @@ class Frontend:
     # ----
     async def get_version(self, request):
         return aiohttp.web.json_response({'version': self.version})
+
+    # ----
+    async def logs_page(self, request):
+        return aiohttp.web.FileResponse('web/logs.html')
+
+    # ----
+    async def get_logs(self, request):
+        try:
+            lines = int(request.query.get('lines', 200))
+        except ValueError:
+            lines = 200
+        lines = max(1, min(lines, 2000))
+
+        stdout, returncode = await execute(['journalctl', '-u', 'kikela.service', '-n', str(lines), '--no-pager', '-o', 'short-iso'])
+        if returncode != 0:
+            return aiohttp.web.json_response({'error': 'Impossible de lire le journal du service.'}, status=500)
+
+        logs = stdout.decode('utf-8', errors='replace')
+
+        def short_date(match):
+            day = match.group('DAY')
+            month = match.group('MONTH')
+            time = match.group('TIME')
+            return f'{day}/{month}-{time} '
+
+        short_logs = re.sub(self.log_pattern, short_date, logs)
+
+        return aiohttp.web.json_response({'logs': short_logs})
 
     # ----
     async def handle_ws(self, request):

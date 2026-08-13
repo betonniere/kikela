@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal du service Kikela</title>
+    <style>
+      :root {
+        --bg-color: #1e1e2e;
+        --container-bg: #252538;
+        --border-color: #3f3f56;
+        --text-color: #cdd6f4;
+        --text-muted: #a6adc8;
+        --primary: #cba6f7;
+        --primary-hover: #b4befe;
+      }
+
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        margin: 0;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+
+      .app-container {
+        width: 100%;
+        max-width: 1000px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .panel {
+        background-color: var(--container-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+      }
+
+      h2 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        font-size: 1.4rem;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 10px;
+        color: var(--text-color);
+        letter-spacing: 0.3px;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+
+      .toolbar label {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      select {
+        background-color: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 6px 10px;
+        color: var(--text-color);
+        font-size: 0.9rem;
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        user-select: none;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+      }
+
+      .checkbox-group input {
+        accent-color: var(--primary);
+        cursor: pointer;
+      }
+
+      .btn {
+        background-color: var(--primary);
+        color: #11111b;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 14px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background-color 0.2s, transform 0.1s;
+      }
+
+      .btn:hover {
+        background-color: var(--primary-hover);
+      }
+
+      .btn:active {
+        transform: scale(0.98);
+      }
+
+      #status {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-left: auto;
+      }
+
+      #logs {
+        background-color: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 14px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 0.82rem;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 70vh;
+        overflow-y: auto;
+      }
+
+      #logs.error {
+        color: #f38ba8;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app-container">
+      <div class="panel">
+        <h2>Journal du service Kikela</h2>
+
+        <div class="toolbar">
+          <label for="lines-select">Nombre de lignes</label>
+          <select id="lines-select">
+            <option value="100">100</option>
+            <option value="200" selected>200</option>
+            <option value="500">500</option>
+            <option value="1000">1000</option>
+          </select>
+
+          <label class="checkbox-group">
+            <input type="checkbox" id="auto-refresh" checked>
+            Rafraîchissement auto
+          </label>
+
+          <button type="button" class="btn" id="refresh-btn">Rafraîchir</button>
+
+          <span id="status"></span>
+        </div>
+
+        <pre id="logs">Chargement…</pre>
+      </div>
+    </div>
+
+    <script>
+      const REFRESH_INTERVAL_MS = 5000;
+
+      const logsEl = document.getElementById('logs');
+      const statusEl = document.getElementById('status');
+      const linesSelect = document.getElementById('lines-select');
+      const autoRefreshCheckbox = document.getElementById('auto-refresh');
+      const refreshBtn = document.getElementById('refresh-btn');
+
+      let refreshTimer = null;
+
+      async function fetchLogs()
+      {
+        try
+        {
+          const response = await fetch(`/api/logs?lines=${linesSelect.value}`, { cache: 'no-store' });
+          const data = await response.json();
+
+          if (!response.ok || data.error)
+          {
+            logsEl.classList.add('error');
+            logsEl.textContent = data.error || `Erreur ${response.status}`;
+            return;
+          }
+
+          logsEl.classList.remove('error');
+
+          const wasAtBottom = logsEl.scrollHeight - logsEl.scrollTop <= logsEl.clientHeight + 30;
+          logsEl.textContent = data.logs || '(journal vide)';
+          if (wasAtBottom)
+            logsEl.scrollTop = logsEl.scrollHeight;
+
+          statusEl.textContent = `Mis à jour à ${new Date().toLocaleTimeString('fr-FR')}`;
+        }
+        catch (e)
+        {
+          logsEl.classList.add('error');
+          logsEl.textContent = "Impossible de contacter le service.";
+        }
+      }
+
+      function scheduleAutoRefresh()
+      {
+        if (refreshTimer)
+          clearInterval(refreshTimer);
+
+        if (autoRefreshCheckbox.checked)
+          refreshTimer = setInterval(fetchLogs, REFRESH_INTERVAL_MS);
+      }
+
+      refreshBtn.addEventListener('click', fetchLogs);
+      linesSelect.addEventListener('change', fetchLogs);
+      autoRefreshCheckbox.addEventListener('change', scheduleAutoRefresh);
+
+      fetchLogs();
+      scheduleAutoRefresh();
+    </script>
+  </body>
+</html>
