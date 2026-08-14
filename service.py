@@ -588,6 +588,8 @@ async def monitoring(firmware, frontend, wifi, network, account):
 
     probe_period = 5
     hubs = []
+    armed_reset_period = datetime.timedelta(minutes=10)
+    last_armed_reset = datetime.datetime.now()
 
     configuration_page = frontend.get_page('configuration')
     await configuration_page.display()
@@ -640,6 +642,11 @@ async def monitoring(firmware, frontend, wifi, network, account):
                         else:
                             new_hubs.append(next(hub for hub in hubs if hub.name == hub_name))
                 hubs = new_hubs
+
+                if datetime.datetime.now() - last_armed_reset >= armed_reset_period:
+                    last_armed_reset = datetime.datetime.now()
+                    for hub in hubs:
+                        hub.armed = None
 
                 try:
                     if network.empty:
